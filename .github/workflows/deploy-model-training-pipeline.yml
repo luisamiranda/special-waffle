@@ -22,25 +22,25 @@ jobs:
           echo "config-file=$config_env" >> $GITHUB_OUTPUT;
   get-config:
     needs: set-env-branch
-    uses: Azure/mlops-templates/.github/workflows/read-yaml.yml@main
+    uses: luisamiranda/mlops-templates/.github/workflows/read-yaml.yml@main
     with:
       file_name: ${{ needs.set-env-branch.outputs.config-file}}
-  create-dataprep-compute:
-    needs: [get-config]
-    uses: Azure/mlops-templates/.github/workflows/create-compute.yml@main
-    with:
-      cluster_name: cpu-cluster
-      size: Standard_DS3_v2
-      min_instances: 0
-      max_instances: 4
-      cluster_tier: low_priority
-      resource_group: ${{ needs.get-config.outputs.resource_group }}
-      workspace_name: ${{ needs.get-config.outputs.aml_workspace }}
-    secrets:
-      creds: ${{secrets.AZURE_CREDENTIALS}}
+  # create-dataprep-compute:
+  #   needs: [get-config]
+  #   uses: luisamiranda/mlops-templates/.github/workflows/create-compute.yml@main
+  #   with:
+  #     cluster_name: cpu-cluster
+  #     size: Standard_DS3_v2
+  #     min_instances: 0
+  #     max_instances: 4
+  #     cluster_tier: low_priority
+  #     resource_group: ${{ needs.get-config.outputs.resource_group }}
+  #     workspace_name: ${{ needs.get-config.outputs.aml_workspace }}
+  #   secrets:
+  #     creds: ${{secrets.AZURE_CREDENTIALS}}
   create-training-compute:
     needs: get-config
-    uses: Azure/mlops-templates/.github/workflows/create-compute.yml@main
+    uses: luisamiranda/mlops-templates/.github/workflows/create-compute.yml@main
     with:
       cluster_name: gpu-cluster
       size: Standard_NC6
@@ -52,8 +52,8 @@ jobs:
     secrets:
       creds: ${{secrets.AZURE_CREDENTIALS}}
   register-environment:
-    needs: [get-config, create-dataprep-compute, create-training-compute]
-    uses: Azure/mlops-templates/.github/workflows/register-environment.yml@main
+    needs: [get-config, create-training-compute]
+    uses: luisamiranda/mlops-templates/.github/workflows/register-environment.yml@main
     with:
       resource_group: ${{ needs.get-config.outputs.resource_group }}
       workspace_name: ${{ needs.get-config.outputs.aml_workspace }}
@@ -62,7 +62,7 @@ jobs:
       creds: ${{secrets.AZURE_CREDENTIALS}}
   register-dataset:
     needs: [get-config, register-environment]
-    uses: Azure/mlops-templates/.github/workflows/register-dataset.yml@main
+    uses: luisamiranda/mlops-templates/.github/workflows/register-dataset.yml@main
     with:
       resource_group: ${{ needs.get-config.outputs.resource_group }}
       workspace_name: ${{ needs.get-config.outputs.aml_workspace }}
@@ -75,12 +75,11 @@ jobs:
     needs:
       [
         get-config,
-        create-dataprep-compute,
         create-training-compute,
         register-environment,
         register-dataset,
       ]
-    uses: Azure/mlops-templates/.github/workflows/run-pipeline.yml@main
+    uses: luisamiranda/mlops-templates/.github/workflows/run-pipeline.yml@main
     with:
       resource_group: ${{ needs.get-config.outputs.resource_group }}
       workspace_name: ${{ needs.get-config.outputs.aml_workspace }}
