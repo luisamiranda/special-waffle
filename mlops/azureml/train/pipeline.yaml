@@ -24,7 +24,7 @@ jobs:
   train:
     type: command
     component: file:train.yaml
-    compute: azureml:gpu-cluster
+    compute: azureml:cpu-cluster
     resources:
       instance_count: 1 # number of nodes
     distribution:

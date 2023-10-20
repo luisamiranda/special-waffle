@@ -38,21 +38,21 @@ jobs:
   #     workspace_name: ${{ needs.get-config.outputs.aml_workspace }}
   #   secrets:
   #     creds: ${{secrets.AZURE_CREDENTIALS}}
-  create-training-compute:
-    needs: get-config
-    uses: luisamiranda/mlops-templates/.github/workflows/create-compute.yml@main
-    with:
-      cluster_name: gpu-cluster
-      size: Standard_NC6
-      min_instances: 0
-      max_instances: 1
-      cluster_tier: low_priority
-      resource_group: ${{ needs.get-config.outputs.resource_group }}
-      workspace_name: ${{ needs.get-config.outputs.aml_workspace }}
-    secrets:
-      creds: ${{secrets.AZURE_CREDENTIALS}}
+  # create-training-compute:
+  # needs: get-config
+  # uses: luisamiranda/mlops-templates/.github/workflows/create-compute.yml@main
+  # with:
+  #   cluster_name: gpu-cluster
+  #   size: Standard_NC6
+  #   min_instances: 0
+  #   max_instances: 1
+  #   cluster_tier: low_priority
+  #   resource_group: ${{ needs.get-config.outputs.resource_group }}
+  #   workspace_name: ${{ needs.get-config.outputs.aml_workspace }}
+  # secrets:
+  #   creds: ${{secrets.AZURE_CREDENTIALS}}
   register-environment:
-    needs: [get-config, create-training-compute]
+    needs: [get-config]
     uses: luisamiranda/mlops-templates/.github/workflows/register-environment.yml@main
     with:
       resource_group: ${{ needs.get-config.outputs.resource_group }}
@@ -72,13 +72,7 @@ jobs:
     secrets:
       creds: ${{secrets.AZURE_CREDENTIALS}}
   run-model-training-pipeline:
-    needs:
-      [
-        get-config,
-        create-training-compute,
-        register-environment,
-        register-dataset,
-      ]
+    needs: [get-config, register-environment, register-dataset]
     uses: luisamiranda/mlops-templates/.github/workflows/run-pipeline.yml@main
     with:
       resource_group: ${{ needs.get-config.outputs.resource_group }}
