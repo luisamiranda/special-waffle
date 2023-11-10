@@ -1,0 +1,67 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+# Based on COCO128 dataset https://www.kaggle.com/ultralytics/coco128 (first 128 images from COCO train2017) by Ultralytics
+# Example usage: yolo train data=custom-coco.yaml
+#
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+# https://<storage-account>.blob.core.windows.net/cust1
+# https://<storage-account>.blob.core.windows.net/cust1
+# └───ppe
+#     └───datasets
+#         ├───2023-09-SET-01
+#         │   ├───train
+#         │   │   ├───images
+#         │   │   ├───labels
+#         │   └───val
+#         │       ├───images
+#         │       └───labels
+#         ├───2023-09-SET-02
+#         │   ├───train
+#         │   │   ├───images
+#         │   │   ├───labels
+#         │   └───val
+#         │       ├───images
+#         │       └───labels
+#         └───2023-10-SET-01
+#             ├───train
+#             │   ├───images
+#             │   ├───labels
+#             └───val
+#                 ├───images
+#                 └───labels
+#
+# Then in the .yaml file that specifies the folders to train on we can do this:
+# ```
+# path: /ppe/datasets  # dataset root dir
+# train: 
+#   - 2023-09-set-01/train/images
+#   - 2023-09-set-02/train/images
+#   - 2023-10-set-01/train/images
+# val: 
+#   - 2023-09-set-01/val/images
+#   - 2023-09-set-02/val/images
+#   - 2023-10-set-01/val/images
+# ```
+
+
+path: @@STORAGE@@/datasets  # dataset root dir
+train: # train images (relative to 'path') 128 images (must include the word 'datasets')
+- train/images
+val: # val images (relative to 'path') 128 images
+- val/images
+
+# Classes
+nc: 13
+names:
+  0: person
+  1: bicycle
+  2: car
+  3: motorcycle
+  4: truck
+  5: backpack
+  6: handbag
+  7: suitcase
+  8: vest
+  9: helmet
+  10: barrierArm
+  11: lying
+  12: box
