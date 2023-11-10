@@ -1,0 +1,88 @@
+name: run-training-pipeline
+
+on:
+  workflow_call:
+    secrets:
+      AZURE_CREDENTIALS:
+        required: true
+      ARM_SUBSCRIPTION_ID:
+        required: true
+    inputs:
+      parameters_file:
+        required: true
+        type: string
+      resource_group:
+        required: true
+        type: string
+      workspace_name:
+        required: true
+        type: string
+      customer_id:
+        required: true
+        type: string
+      model_id:
+        required: true
+        type: string
+      env_name:
+        type: string
+        required: true
+      datasets:
+        type: string
+
+jobs:
+  submit-azureml-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: "Az CLI login"
+        uses: azure/login@v1
+        with:
+          creds: ${{secrets.AZURE_CREDENTIALS}}
+          enable-AzPSSession: true
+      - name: install-extension
+        run: az extension add -n ml -y --upgrade
+      - name: install tools
+        run: sudo apt-get install uuid-runtime -ys
+      - name: specialize-pipeline
+        run: |
+          export C_ID="${{ github.event.inputs.customer_id }}"
+          export M_ID="${{ github.event.inputs.model_id }}"
+          export EV="${{ github.event.inputs.env_name }}"
+          export TR_ID=$(uuidgen)
+          echo "Before"
+          cat mlops/azureml/pipeline/pipeline-template.yml
+          cat mlops/azureml/pipeline/pipeline-template.yml | envsubst '$C_ID,$M_ID,$$EV,$TR_ID'
+          cat mlops/azureml/pipeline/pipeline-template.yml | envsubst '$C_ID,$M_ID,$$EV,$TR_ID' > ${{ github.workspace }}/${{ inputs.parameters_file }}
+          echo "After"
+          cat ${{ github.workspace }}/${{ inputs.parameters_file  }}
+          ls -la mlops/azureml/pipeline
+      - name: run-azure-ml-pipeline
+        run: |
+          cat mlops/azureml/pipeline/pipeline.yml
+          run_id=$(az ml job create \
+            --file ${{ github.workspace }}/${{ inputs.parameters_file  }} \
+            --resource-group ${{ inputs.resource_group }} \
+            --workspace-name ${{ inputs.workspace_name }} \
+            --set inputs.customer_id=${{ inputs.customer_id }} \
+            --set inputs.model_id=${{ inputs.model_id }} \
+            --set inputs.datasets=${{ inputs.datasets }} \
+            --query name -o tsv)
+          if [[ -z "$run_id" ]]
+          then
+            echo "Job creation failed"
+            exit 3
+          fi
+          az ml job show -n $run_id \
+            --resource-group ${{ inputs.resource_group }} \
+            --workspace-name ${{ inputs.workspace_name }} \
+            --web 
+          status=$(az ml job show -n $run_id \
+                     --resource-group ${{ inputs.resource_group }} \
+                     --workspace-name ${{ inputs.workspace_name }} \
+                     --query status -o tsv)
+          if [[ -z "$status" ]]
+          then
+            echo "Status query failed"
+            exit 4
+          fi
