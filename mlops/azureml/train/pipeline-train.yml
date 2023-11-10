@@ -1,0 +1,33 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+display_name: Train Yolo Pipeline
+
+inputs:
+  image_folder:
+    type: uri_folder
+    mode: ro_mount
+    path: azureml://datastores/trainingdatastore_$C_ID/paths/$M_ID
+
+outputs:
+  trained_model:
+    type: uri_folder
+    mode: upload
+    path: azureml://datastores/trainingdatastore_$C_ID/paths/$M_ID/$TR_ID
+
+settings:
+  default_compute: azureml:gpu-cluster-1
+  default_environment: $EV
+  continue_on_step_failure: false
+
+jobs:
+  train_yolo_model:
+    code: ../../..
+    command: data-science/src/train.py --labeled_images ${{ inputs.labeled_images }} --trained_model ${{ outputs.trained_model }} --experiment_name special-Yolo8-train
+    environment: $EV
+    inputs:
+      labeled_images:
+        type: uri_folder
+        path: ${{ parent.inputs.image_folder }}
+    outputs:
+      trained_model:
+        path: ${{ parent.outputs.trained_model }}

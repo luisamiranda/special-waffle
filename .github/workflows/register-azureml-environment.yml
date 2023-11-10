@@ -1,20 +1,7 @@
-name: deploy-model-training-pipeline
+name: register-azureml-environment
 
 on:
   workflow_dispatch:
-    inputs:
-      customer_id:
-        type: string
-        description: "Customer Specifier"
-      model_id:
-        type: string
-        description: "Model Specifier (e.g. ppe)"
-      datasets:
-        type: string
-        description: "Comma-separaterd list of Datasets (e.g. 2023-09-SET-01,2023-09-SET-02,2023-10-SET-01) - leave blank to process all datasets"
-      env_name:
-        type: string
-        default: azureml:yolov8-train-env@latest
 
 jobs:
   set-env-branch:
@@ -41,17 +28,12 @@ jobs:
     with:
       file_name: ${{ needs.set-env-branch.outputs.config-file}}
 
-  run-model-training-pipeline:
+  register-environment:
     needs: get-config
-    uses: ./.github/workflows/run-training-pipeline.yml
+    uses: Azure/mlops-templates/.github/workflows/register-environment.yml@main
     with:
       resource_group: ${{ needs.get-config.outputs.resource_group }}
       workspace_name: ${{ needs.get-config.outputs.aml_workspace }}
-      customer_id: ${{ github.event.inputs.customer_id }}
-      model_id: ${{ github.event.inputs.model_id }}
-      parameters_file: mlops/azureml/pipeline/pipeline-train.yml
-      datasets: ${{ github.event.inputs.datasets }}
-      env_name: ${{inputs.env_name}}
+      environment_file: mlops/azureml/environment/train-env.yml
     secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      creds: ${{secrets.AZURE_CREDENTIALS}}

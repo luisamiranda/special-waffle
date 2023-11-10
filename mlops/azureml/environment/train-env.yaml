@@ -1,0 +1,4 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+name: yolov8-env
+build:
+  path: ../../../data-science/environment
